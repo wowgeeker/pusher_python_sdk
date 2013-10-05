@@ -13,7 +13,8 @@
 
 import urlparse
 
-import pycurl
+#import pycurl
+import urllib2
 
 import StringIO
 
@@ -89,38 +90,42 @@ class RequestCore(object):
 		self.proxy = urlparse.urlparse(proxy)
 
 	def handle_request(self):
-		curl_handle = pycurl.Curl()
-		# set default options.
-		curl_handle.setopt(pycurl.URL, self.request_url)
-		curl_handle.setopt(pycurl.REFERER, self.request_url)
-		curl_handle.setopt(pycurl.USERAGENT, self.useragent)
-		curl_handle.setopt(pycurl.TIMEOUT, 5184000)
-		curl_handle.setopt(pycurl.CONNECTTIMEOUT, 120)
-		curl_handle.setopt(pycurl.HEADER, True)
-	#	curl_handle.setopt(pycurl.VERBOSE, 1)
-		curl_handle.setopt(pycurl.FOLLOWLOCATION, 1)
-		curl_handle.setopt(pycurl.MAXREDIRS, 5)
-		if(self.request_headers and len(self.request_headers) > 0):
-			tmplist = list()
-			for(key, value) in self.request_headers.items():
-				tmplist.append(key + ':' + value)
-			curl_handle.setopt(pycurl.HTTPHEADER, tmplist)
-		#目前只需支持POST
-		curl_handle.setopt(pycurl.HTTPPROXYTUNNEL, 1)
-		curl_handle.setopt(pycurl.POSTFIELDS, self.request_body)
-
-		response = StringIO.StringIO()
-		curl_handle.setopt(pycurl.WRITEFUNCTION, response.write)
-		curl_handle.perform()
-
-		self.response_code = curl_handle.getinfo(curl_handle.HTTP_CODE)
-		header_size = curl_handle.getinfo(curl_handle.HEADER_SIZE)
-		resp_str = response.getvalue()
-		self.response_headers = resp_str[0 : header_size]
-		self.response_body = resp_str[header_size : ]
-	
-		response.close()
-		curl_handle.close()
+		response=urllib2.urlopen(self.request_url, self.request_body, 10)
+		self.response_headers=response.headers.getplist()
+		self.response_body=response.read()
+		self.response_code=response.code
+#		curl_handle = pycurl.Curl()
+#		# set default options.
+#		curl_handle.setopt(pycurl.URL, self.request_url)
+#		curl_handle.setopt(pycurl.REFERER, self.request_url)
+#		curl_handle.setopt(pycurl.USERAGENT, self.useragent)
+#		curl_handle.setopt(pycurl.TIMEOUT, 5184000)
+#		curl_handle.setopt(pycurl.CONNECTTIMEOUT, 120)
+#		curl_handle.setopt(pycurl.HEADER, True)
+#	#	curl_handle.setopt(pycurl.VERBOSE, 1)
+#		curl_handle.setopt(pycurl.FOLLOWLOCATION, 1)
+#		curl_handle.setopt(pycurl.MAXREDIRS, 5)
+#		if(self.request_headers and len(self.request_headers) > 0):
+#			tmplist = list()
+#			for(key, value) in self.request_headers.items():
+#				tmplist.append(key + ':' + value)
+#			curl_handle.setopt(pycurl.HTTPHEADER, tmplist)
+#		#目前只需支持POST
+#		curl_handle.setopt(pycurl.HTTPPROXYTUNNEL, 1)
+#		curl_handle.setopt(pycurl.POSTFIELDS, self.request_body)
+#
+#		response = StringIO.StringIO()
+#		curl_handle.setopt(pycurl.WRITEFUNCTION, response.write)
+#		curl_handle.perform()
+#
+#		self.response_code = curl_handle.getinfo(curl_handle.HTTP_CODE)
+#		header_size = curl_handle.getinfo(curl_handle.HEADER_SIZE)
+#		resp_str = response.getvalue()
+#		self.response_headers = resp_str[0 : header_size]
+#		self.response_body = resp_str[header_size : ]
+#	
+#		response.close()
+#		curl_handle.close()
 
 	
 	def get_response_header(self, header = None):
